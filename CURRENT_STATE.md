@@ -43,6 +43,6 @@ host-side template proposal; no Proxmox operation was performed.
 Known limitations: representative bit-depth/HDR/audio/subtitle/performance and
 thermal acceptance remain; non-Battlemage profiles are placeholders; the
 private deployment repository/URL has not been supplied. Reserved `/mnt/media`
-directories still require one privileged creation command because this session
-has no cached sudo authentication. The existing public
+source, work, output, and archive directories exist as `root:media-pipeline`
+mode `2775`; verification confirms they are not mounts. The existing public
 `origin` is retained unchanged and no productization commit is pushed to it.
