@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+out=${1:-/srv/b70-encode/tests/results/vaapi-smoke.mkv}
+mkdir -p "$(dirname "$out")"
+sg render -c "ffmpeg -hide_banner -loglevel verbose -vaapi_device /dev/dri/renderD128 -f lavfi -i 'testsrc2=size=1920x1080:rate=30' -t 10 -vf 'format=nv12,hwupload' -c:v av1_vaapi -b:v 5M -y '$out'"
+/srv/b70-encode/bin/validate-output "$out"
+

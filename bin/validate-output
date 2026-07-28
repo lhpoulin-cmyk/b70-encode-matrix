@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+[[ $# -eq 1 ]] || { echo "usage: validate-output OUTPUT" >&2; exit 64; }
+for cmd in ffprobe ffmpeg sha256sum; do command -v "$cmd" >/dev/null || { echo "$cmd is required" >&2; exit 69; }; done
+file="$1"
+[[ -f "$file" && -s "$file" ]] || { echo "output is missing or empty: $file" >&2; exit 66; }
+ffprobe -v error -show_format -show_streams -show_chapters -of json -- "$file"
+ffmpeg -hide_banner -v error -i "$file" -map 0 -f null -
+sha256sum -- "$file"
+

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+[[ $# -eq 1 ]] || { echo "usage: probe INPUT" >&2; exit 64; }
+command -v ffprobe >/dev/null || { echo "ffprobe is required" >&2; exit 69; }
+[[ -f "$1" ]] || { echo "input is not a regular file: $1" >&2; exit 66; }
+ffprobe -v error -show_format -show_streams -show_chapters -of json -- "$1"
+
