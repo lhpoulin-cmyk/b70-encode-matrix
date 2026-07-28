@@ -1,0 +1,12 @@
+status: pending
+representative_encode: pending
+bit_depth: pending
+hdr_sdr: pending
+audio_policy: pending
+subtitle_policy: pending
+output_validation: pending
+performance: pending
+thermal_errors: pending
+repeated_invocation: pending
+production_command: pending
+rollback: pending

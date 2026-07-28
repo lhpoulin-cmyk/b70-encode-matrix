@@ -1,0 +1,41 @@
+profile:
+  id: intel-battlemage
+  version: 0.1.0
+  status: operational
+  description: Intel Battlemage GPU media profile
+device:
+  expected_vendor: Intel
+  expected_pci_vendor_id: "8086"
+  expected_kernel_driver: xe
+  render_node: /dev/dri/renderD128
+  render_node_override_allowed: true
+media:
+  userspace_driver: iHD
+  vaapi_driver: iHD
+  supported_apis:
+    - vaapi
+    - qsv
+production:
+  av1:
+    api: vaapi
+    encoder: av1_vaapi
+experimental:
+  av1:
+    api: qsv
+    encoder: av1_qsv
+    status: validated-synthetic
+    limitation: Representative-media acceptance testing is incomplete
+requirements:
+  makemkv: required
+required_tests:
+  - gpu-detected
+  - kernel-driver
+  - render-node
+  - render-permissions
+  - vainfo
+  - av1-profile
+  - synthetic-encode
+  - output-probe
+  - full-decode
+  - checksum
+  - no-software-fallback

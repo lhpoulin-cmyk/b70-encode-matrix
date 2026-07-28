@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root=/srv/b70-encode
+active="$root/config/active-hardware-profile.yaml"
+[[ -r "$active" ]] || { echo "active hardware profile missing" >&2; exit 69; }
+render_node=${RENDER_NODE:-$(awk '/^[[:space:]]+render_node:/ { print $2; exit }' "$active")}
+results="$root/tests/results"
+mkdir -p "$results"
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+output="$results/${stamp}-production-av1.mkv"
+log="$results/${stamp}-production-av1.log"
+probe="$results/${stamp}-production-av1.ffprobe.json"
+checksum="$results/${stamp}-production-av1.sha256"
+space_available=$(df --output=avail -B1 "$results" | tail -n1)
+space_total=$(df --output=size -B1 "$results" | tail -n1)
+(( space_available >= 30 * 1024 * 1024 * 1024 && space_available >= space_total / 5 )) || { echo "root-space reserve not met" >&2; exit 75; }
+ffmpeg -hide_banner -loglevel verbose -vaapi_device "$render_node" -f lavfi -i 'testsrc2=size=1920x1080:rate=30' -t 10 -vf 'format=nv12,hwupload' -c:v av1_vaapi -b:v 5M -y "$output" 2>&1 | tee "$log"
+grep -q 'av1_vaapi' "$log" || { echo "hardware encoder not proven" >&2; exit 1; }
+grep -q 'Using VAAPI profile' "$log" || { echo "VA-API path not proven" >&2; exit 1; }
+if grep -Eqi 'falling back|software fallback' "$log"; then echo "software fallback detected" >&2; exit 1; fi
+ffprobe -v error -show_entries stream=codec_name,profile,pix_fmt,width,height,avg_frame_rate -of json "$output" > "$probe"
+grep -q '"codec_name": "av1"' "$probe" || { echo "unexpected codec" >&2; exit 1; }
+ffmpeg -v error -i "$output" -f null - 2> "$results/${stamp}-production-av1.decode.log"
+sha256sum "$output" | tee "$checksum"
+command -v makemkvcon >/dev/null || { echo "MakeMKV unavailable" >&2; exit 1; }
+echo "PASS production AV1 regression output=$output"

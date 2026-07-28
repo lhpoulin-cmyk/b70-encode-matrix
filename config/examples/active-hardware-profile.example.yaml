@@ -1,0 +1,8 @@
+profile:
+  id: intel-battlemage
+  version: 0.1.0
+deployment_overrides:
+  render_node: /dev/dri/renderD128
+installed:
+  date_utc: <UTC-TIMESTAMP>
+  source_commit: <GIT-COMMIT>

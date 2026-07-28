@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root=/srv/b70-encode
+representative=
+record=
+repeat=2
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --representative) representative=${2:?}; shift 2 ;;
+    --record) record=${2:?}; shift 2 ;;
+    --repeat) repeat=${2:?}; shift 2 ;;
+    *) echo "usage: appliance --representative FILE --record FILE [--repeat N]" >&2; exit 64 ;;
+  esac
+done
+[[ -f "$representative" ]] || { echo "representative media is required" >&2; exit 66; }
+[[ -r "$record" ]] || { echo "acceptance record is required" >&2; exit 66; }
+"$root/tests/smoke/appliance"
+for ((i=1; i<=repeat; i++)); do "$root/tests/regression/production-av1"; done
+"$root/bin/probe" "$representative" > "$root/tests/results/representative-input.ffprobe.json"
+for gate in representative_encode bit_depth hdr_sdr audio_policy subtitle_policy output_validation performance thermal_errors repeated_invocation production_command rollback; do
+  grep -Eq "^[[:space:]]*$gate:[[:space:]]*passed[[:space:]]*$" "$record" || { echo "acceptance gate not passed: $gate" >&2; exit 1; }
+done
+grep -Eq '^[[:space:]]*status:[[:space:]]*passed[[:space:]]*$' "$record" || { echo "acceptance record is not promoted" >&2; exit 1; }
+echo "PASS appliance acceptance record=$record"

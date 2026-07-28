@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root=/srv/b70-encode
+render_node=${RENDER_NODE:-/dev/dri/renderD128}
+results="$root/tests/results"
+mkdir -p "$results"
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+output="$results/${stamp}-experimental-qsv.mkv"
+log="$results/${stamp}-experimental-qsv.log"
+ffmpeg -hide_banner -loglevel verbose -init_hw_device "qsv=qs:hw,child_device=$render_node" -filter_hw_device qs -f lavfi -i 'testsrc2=size=1920x1080:rate=30' -t 10 -vf 'format=nv12,hwupload=extra_hw_frames=64' -c:v av1_qsv -b:v 5M -y "$output" 2>&1 | tee "$log"
+grep -q 'av1_qsv' "$log"
+ffprobe -v error -show_entries stream=codec_name,profile,pix_fmt,width,height,avg_frame_rate -of json "$output" > "$results/${stamp}-experimental-qsv.ffprobe.json"
+ffmpeg -v error -i "$output" -f null - 2> "$results/${stamp}-experimental-qsv.decode.log"
+sha256sum "$output" | tee "$results/${stamp}-experimental-qsv.sha256"
+echo "PASS experimental QSV regression; this does not promote QSV to production"

@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 section() { printf '\n[%s]\n' "$1"; }
 section identity; hostnamectl 2>&1 || true; cat /etc/os-release; uname -a; id
+section appliance; cat /srv/b70-encode/BUILD 2>&1 || true; cat /srv/b70-encode/config/active-hardware-profile.yaml 2>&1 || true
 section pci; lspci -nnk | sed -n '/VGA compatible controller/,+4p'
 section dri; ls -la /dev/dri 2>&1 || true; stat -c '%n owner=%U group=%G mode=%a' /dev/dri/* 2>&1 || true
 section vainfo; LIBVA_DRIVER_NAME=iHD vainfo --display drm --device /dev/dri/renderD128 2>&1 || true

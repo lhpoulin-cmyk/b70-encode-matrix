@@ -1,0 +1,9 @@
+identity:
+  appliance: gpu-encode
+  release: <APPLIANCE-RELEASE>
+  commit: <GIT-COMMIT>
+  template: <TEMPLATE-VERSION>
+  hardware_profile: <HARDWARE-PROFILE>
+  deployment_profile: <DEPLOYMENT-PROFILE>
+  hostname: <INSTANCE-HOSTNAME>
+  created_utc: <UTC-TIMESTAMP>

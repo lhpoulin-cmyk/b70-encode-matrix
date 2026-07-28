@@ -9,6 +9,13 @@ source "$manifest"
 : "${OUTPUT:?manifest requires OUTPUT}"
 API=${API:-vaapi}
 OVERWRITE=${OVERWRITE:-no}
+ACTIVE_PROFILE=${ACTIVE_PROFILE:-/srv/b70-encode/config/active-hardware-profile.yaml}
+if [[ -z ${RENDER_NODE:-} && -r "$ACTIVE_PROFILE" ]]; then
+  RENDER_NODE=$(awk '/^[[:space:]]+render_node:/ { print $2; exit }' "$ACTIVE_PROFILE")
+fi
+RENDER_NODE=${RENDER_NODE:-/dev/dri/renderD128}
+[[ "$RENDER_NODE" == /dev/dri/renderD* ]] || { echo "invalid render node: $RENDER_NODE" >&2; exit 65; }
+[[ -c "$RENDER_NODE" && -r "$RENDER_NODE" && -w "$RENDER_NODE" ]] || { echo "render node unavailable or inaccessible: $RENDER_NODE" >&2; exit 69; }
 [[ -f "$INPUT" ]] || { echo "input is not a regular file" >&2; exit 66; }
 input_real=$(readlink -f -- "$INPUT")
 output_parent=$(dirname -- "$OUTPUT")
@@ -17,7 +24,7 @@ output_real="$(readlink -f -- "$output_parent")/$(basename -- "$OUTPUT")"
 [[ "$input_real" != "$output_real" ]] || { echo "input and output must differ" >&2; exit 65; }
 [[ ! -e "$OUTPUT" || "$OVERWRITE" == yes ]] || { echo "output exists; set OVERWRITE=yes explicitly" >&2; exit 73; }
 case "$API" in
-  vaapi) encoder=av1_vaapi; hw=(-vaapi_device /dev/dri/renderD128); filter='format=nv12,hwupload' ;;
+  vaapi) encoder=av1_vaapi; hw=(-vaapi_device "$RENDER_NODE"); filter='format=nv12,hwupload' ;;
   qsv) echo "QSV is not accepted for production" >&2; exit 69 ;;
   *) echo "unsupported API: $API" >&2; exit 64 ;;
 esac
@@ -32,7 +39,7 @@ case "$OUTPUT" in
 esac
 log="${OUTPUT}.ffmpeg.log"
 [[ ! -e "$part" ]] || { echo "partial output exists: $part" >&2; exit 73; }
-printf 'ffmpeg hardware_api=%s encoder=%s render_node=/dev/dri/renderD128\n' "$API" "$encoder" | tee "$log"
+printf 'ffmpeg hardware_api=%s encoder=%s render_node=%s\n' "$API" "$encoder" "$RENDER_NODE" | tee "$log"
 ffmpeg -hide_banner -loglevel verbose "${hw[@]}" -i "$INPUT" -map 0:v:0 -vf "$filter" -c:v "$encoder" -b:v "${VIDEO_BITRATE:-5M}" -an -- "$part" 2>&1 | tee -a "$log"
 /srv/b70-encode/bin/validate-output "$part" | tee "${OUTPUT}.validation.txt"
 mv -f -- "$part" "$OUTPUT"

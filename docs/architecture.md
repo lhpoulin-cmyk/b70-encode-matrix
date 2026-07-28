@@ -1,14 +1,31 @@
 # Architecture
 
-The controlled flow is:
-
 ```text
-source → ingest → inspect → job manifest → hardware encode → probe
-       → decode validation → checksum → output staging → promotion → evidence
+VM 310 reference ──proves──> Git source of truth
+                                  │
+                                  ├──builds──> VM 9310 generic image
+                                  │                 │
+private deployment profile ──────┴──assigns────────┤
+                                                    v
+                               clone + GPU/storage/network/identity
+                                                    │
+                                      acceptance tests promote it
 ```
 
-Ingest never modifies originals. Inspection creates a machine-readable probe
-and drives an explicit manifest. Encoding names the render node, API, and
-encoder and writes a partial output. Probe, complete decode, and checksum gate
-promotion. Evidence records commands, versions, logs, results, and provenance.
+VM 310 stays attached to the B70 because it is the known-good operational
+reference and regression target. VM 9310 is separately built without physical
+GPU, raw storage, identity, credentials, or runtime history so clones do not
+inherit exclusive resources or secrets. Git is authoritative because images
+are opaque artifacts; policy, scripts, profiles, tests, and release provenance
+must remain reviewable and reproducible.
 
+Hardware profiles describe portable media-stack expectations. Private
+deployment profiles assign a real Proxmox node, logical GPU resource mapping,
+storage, network, and identity. This separation prevents generic code from
+encoding host PCI addresses or disk paths. A clone is only an appliance after
+its observed hardware and media behavior pass acceptance and generate instance
+state.
+
+Runtime media flow remains `source → ingest → inspect → job manifest → explicit
+hardware encode → probe → decode validation → checksum → output staging →
+promotion → evidence`.

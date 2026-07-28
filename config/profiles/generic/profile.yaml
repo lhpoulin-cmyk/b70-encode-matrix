@@ -1,0 +1,17 @@
+profile:
+  id: generic
+  version: 0.1.0
+  status: template-only
+  description: Hardware-neutral template profile; not deployable without a hardware profile
+device:
+  expected_vendor: unspecified
+  expected_kernel_driver: unspecified
+  render_node: deployment-required
+media:
+  userspace_driver: deployment-required
+production: {}
+experimental: {}
+required_tests:
+  - workspace
+  - commands
+  - ffmpeg

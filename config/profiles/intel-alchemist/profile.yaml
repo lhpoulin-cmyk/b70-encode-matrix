@@ -1,0 +1,14 @@
+profile:
+  id: intel-alchemist
+  version: 0.1.0
+  status: not-yet-validated
+  description: Placeholder Intel Alchemist media profile
+device:
+  expected_vendor: Intel
+  expected_kernel_driver: deployment-required
+  render_node: deployment-required
+media:
+  userspace_driver: iHD
+production: {}
+experimental: {}
+required_tests: []

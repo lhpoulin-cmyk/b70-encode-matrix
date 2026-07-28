@@ -1,0 +1,9 @@
+#cloud-config
+package_update: false
+package_upgrade: false
+timezone: Etc/UTC
+ssh_pwauth: false
+disable_root: true
+growpart:
+  mode: auto
+  devices: ['/']

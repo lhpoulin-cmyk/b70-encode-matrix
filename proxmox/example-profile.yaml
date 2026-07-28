@@ -1,0 +1,37 @@
+appliance:
+  repository: <PRIVATE-REPOSITORY-URL>
+  release: gpu-encode-v0.1.0
+  template_vmid: 9310
+  template_name: tpl-gpu-encode-ubuntu2604-v0.1.0
+  ubuntu_iso_volume: <UBUNTU-2604-SERVER-ISO-VOLUME>
+instance:
+  vmid: 311
+  name: <INSTANCE-NAME>
+  node: <PROXMOX-NODE>
+  cores: 6
+  memory_mb: 12288
+virtualization:
+  machine: q35
+  firmware: ovmf
+  bridge: vmbr0
+gpu:
+  resource_mapping: <GPU-RESOURCE-MAPPING>
+  profile: intel-battlemage
+  expected_driver: xe
+  render_node: /dev/dri/renderD128
+storage:
+  os_storage: <PROXMOX-STORAGE>
+  os_disk_size_gib: 40
+  scratch_assignment: <OPTIONAL-INSTANCE-STORAGE>
+network:
+  mode: cloud-init
+  address: dhcp
+cloud_init:
+  user_data: <PRIVATE-USER-DATA-FILE>
+  vendor_data: <PRIVATE-VENDOR-DATA-FILE>
+  network_config: <PRIVATE-NETWORK-CONFIG-FILE>
+  snippets_storage: <PROXMOX-SNIPPETS-STORAGE>
+  snippets_directory: <PROXMOX-SNIPPETS-DIRECTORY>
+media:
+  production_encoder: av1_vaapi
+  experimental_encoder: av1_qsv

@@ -1,0 +1,28 @@
+#cloud-config
+hostname: <INSTANCE-HOSTNAME>
+manage_etc_hosts: true
+package_update: false
+package_upgrade: false
+users:
+  - default
+  - name: <OPERATOR-USER>
+    groups: [sudo, video, render]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) ALL"]
+    ssh_authorized_keys:
+      - <OPERATOR-SSH-PUBLIC-KEY>
+write_files:
+  - path: /etc/b70-encode-deployment.env
+    owner: root:root
+    permissions: "0600"
+    content: |
+      APPLIANCE_RELEASE=<APPLIANCE-RELEASE>
+      HARDWARE_PROFILE=<HARDWARE-PROFILE>
+      DEPLOYMENT_PROFILE=<DEPLOYMENT-PROFILE-ID>
+      TEMPLATE_VERSION=<TEMPLATE-VERSION>
+runcmd:
+  - [mkdir, -p, /srv]
+  - [git, clone, --branch, <APPLIANCE-RELEASE>, <PRIVATE-REPOSITORY-URL>, /srv/b70-encode]
+  - [/srv/b70-encode/bootstrap/install.sh, --profile, /srv/b70-encode/config/profiles/generic/profile.yaml, --operator, <OPERATOR-USER>, --template-mode]
+  - [sh, -c, "touch /var/lib/b70-encode/gpu-finalization-required"]
+final_message: "Generic appliance bootstrap complete; attach/verify GPU, reboot if required, then finalize and accept."

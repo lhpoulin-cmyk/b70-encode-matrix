@@ -1,0 +1,14 @@
+profile:
+  id: nvidia-nvenc
+  version: 0.1.0
+  status: not-yet-validated
+  description: Placeholder NVIDIA NVENC media profile
+device:
+  expected_vendor: NVIDIA
+  expected_kernel_driver: deployment-required
+  render_node: not-applicable
+media:
+  userspace_driver: deployment-required
+production: {}
+experimental: {}
+required_tests: []

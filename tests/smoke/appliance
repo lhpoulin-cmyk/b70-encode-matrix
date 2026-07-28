@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+root=/srv/b70-encode
+active="$root/config/active-hardware-profile.yaml"
+[[ -d "$root" ]] || { echo "FAIL workspace" >&2; exit 1; }
+[[ -r "$active" ]] || { echo "FAIL active-profile" >&2; exit 1; }
+for name in doctor probe encode validate-output collect-evidence; do [[ -x "$root/bin/$name" ]] || { echo "FAIL command:$name" >&2; exit 1; }; done
+for name in ffmpeg ffprobe lspci; do command -v "$name" >/dev/null || { echo "FAIL executable:$name" >&2; exit 1; }; done
+render_node=$(awk '/^[[:space:]]+render_node:/ { print $2; exit }' "$active")
+driver=$(awk '/^[[:space:]]+expected_kernel_driver:/ { print $2; exit }' "$active")
+encoder=$(awk '/^[[:space:]]+encoder:/ { print $2; exit }' "$active")
+[[ -c "$render_node" ]] || { echo "FAIL render-node:$render_node" >&2; exit 1; }
+[[ -r "$render_node" && -w "$render_node" ]] || { echo "FAIL render-permissions:$render_node" >&2; exit 1; }
+lspci -nnk | grep -F "Kernel driver in use: $driver" >/dev/null || { echo "FAIL kernel-driver:$driver" >&2; exit 1; }
+ffmpeg -hide_banner -encoders 2>/dev/null | grep -F " $encoder " >/dev/null || { echo "FAIL encoder:$encoder" >&2; exit 1; }
+if grep -q 'makemkv: required' "$active"; then command -v makemkvcon >/dev/null || { echo "FAIL makemkv" >&2; exit 1; }; fi
+echo "PASS appliance smoke profile=$(awk '/^[[:space:]]+id:/ { print $2; exit }' "$active") render=$render_node encoder=$encoder"

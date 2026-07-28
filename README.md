@@ -1,21 +1,33 @@
-# b70-encode
+# Helix-ARPA GPU Encode Appliance
 
-This VM is solely a media-ingestion, analysis, transcoding, validation, and
-pipeline-automation appliance for the Intel Arc Pro B70.
+This repository is the source of truth for a reusable, dedicated GPU media
+pipeline appliance. It contains policy, bootstrap logic, hardware profiles,
+operator commands, cloud-init examples, validation tests, and reviewed Proxmox
+deployment tooling.
 
-Production AV1 uses `xe → iHD → VA-API → av1_vaapi` on
-`/dev/dri/renderD128`. QSV (`av1_qsv` through oneVPL) is experimental and must
-never silently replace VA-API or fall back to software.
+The appliance has three deliberately separate layers:
 
-Operator commands are in `bin/`: run `bin/doctor` for a read-only state report,
-`bin/probe INPUT` for JSON inspection, `bin/validate-output OUTPUT` for probe,
-full decode and SHA-256, `bin/collect-evidence [label]` for a snapshot, and
-`bin/encode MANIFEST` for a bounded manifest-driven encode. Smoke test with
-`tests/smoke/vaapi-av1`.
+```text
+VM 310                 working B70 reference implementation
+this Git repository    authoritative reusable appliance source
+VM 9310                proposed clean generic Ubuntu template, built separately
+```
 
-Raw evidence is in `evidence/`; job transitions live in `jobs/`; bounded local
-work is in `scratch/` and `tmp/`. External media may be mounted at
-`/mnt/media/{source,work,output,archive}`, but these paths are never assumed to
-be mounts. Originals are immutable and outputs are validated before promotion.
-See `AGENTS.md` for safety boundaries and `docs/` for policies and runbooks.
+VM 310 proves the contract and remains a normal production VM. It is never the
+clone source. VM 9310 contains no GPU, raw disk, instance identity, credentials,
+evidence, or media. A private deployment profile assigns the real host, GPU
+resource mapping, storage, network, and identity to a clone. Acceptance tests
+then promote that clone into an appliance.
 
+Production on the reference instance is explicit Intel VA-API AV1 through
+`/dev/dri/renderD128` and `av1_vaapi`. QSV is repaired and synthetically
+validated but remains experimental pending representative-media acceptance.
+
+Operator entry points are `bin/doctor`, `bin/probe`, `bin/encode`,
+`bin/validate-output`, and `bin/collect-evidence`. Bootstrap begins with
+`bootstrap/install.sh --dry-run --profile config/profiles/intel-battlemage/profile.yaml`.
+Host-side scripts under `proxmox/` render or perform only explicitly authorized
+Proxmox operations; they must not be executed from VM 310.
+
+Read `AGENTS.md`, `docs/appliance-contract.md`, and
+`docs/reference-implementation.md` before changing a deployed instance.
