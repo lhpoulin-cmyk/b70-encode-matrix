@@ -49,3 +49,8 @@ id_ed25519
 id_ed25519.pub
 ssh_host_*_key
 ssh_host_*_key.pub
+/jobs/
+/logs/
+/scratch/
+/tmp/
+/evidence/
